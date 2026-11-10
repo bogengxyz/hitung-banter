@@ -63,6 +63,7 @@ import {
   generateTahap4DriverAssignment,
   generateTahap5OrderCompleted,
   generateDriverShoppingListWhatsApp,
+  generateCombinedCustomerWhatsAppMessage,
 } from '../../lib/whatsapp/combinedOrderTemplates';
 
 interface OrdersViewProps {
@@ -1111,13 +1112,36 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                                   <span className="text-slate-500 ml-2">({cust.customer_phone})</span>
                                 )}
                               </div>
-                              <div className="text-right">
-                                <span className="font-bold text-slate-800">
-                                  Ongkir: {formatRupiah(cust.delivery_fee)} ({cust.distance_km} KM)
-                                </span>
-                                <span className="text-slate-500 block text-[11px]">
-                                  Subtotal Belanja: {isCustomerPricePending(cust) ? 'Menunggu harga' : formatRupiah(cust.shopping_subtotal)}
-                                </span>
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                <div className="text-right">
+                                  <span className="font-bold text-slate-800">
+                                    Ongkir: {formatRupiah(cust.delivery_fee)} ({cust.distance_km} KM)
+                                  </span>
+                                  <span className="text-slate-500 block text-[11px]">
+                                    Subtotal Belanja: {isCustomerPricePending(cust) ? 'Menunggu harga' : formatRupiah(cust.shopping_subtotal)}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const msg = generateCombinedCustomerWhatsAppMessage(cust, group);
+                                    handleCopyText(msg, `cust-copy-${group.id}-${cust.id}`);
+                                  }}
+                                  className="flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-[11px] cursor-pointer self-start sm:self-center"
+                                  title="Salin Pesanan Pelanggan Ini"
+                                >
+                                  {copiedAction === `cust-copy-${group.id}-${cust.id}` ? (
+                                    <>
+                                      <Check className="w-3 h-3 text-emerald-600" />
+                                      <span className="text-emerald-700">Tersalin!</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy className="w-3 h-3" />
+                                      <span>Salin Pesanan</span>
+                                    </>
+                                  )}
+                                </button>
                               </div>
                             </div>
 

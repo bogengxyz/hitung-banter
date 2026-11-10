@@ -229,10 +229,13 @@ test('Reconciliation Suite - Obligation categorization and compensation', async 
     };
 
     const msg = generateCustomerWhatsAppMessage(dummyOrder);
-    assert.match(msg, /RINCIAN PESANAN BANTER/);
-    assert.match(msg, /BNT-20261109-001/);
-    assert.match(msg, /Ayam Goreng/);
-    assert.match(msg, /Rp48\.000/);
+    assert.match(msg, /📋 \*DAFTAR PESANAN\*/);
+    assert.match(msg, /1\. Ayam Goreng \(2x\) - Rp30\.000/);
+    assert.match(msg, /2\. Es Teh \(2x\) - Rp10\.000/);
+    assert.match(msg, /\*Rincian Biaya:\*/);
+    assert.match(msg, /- Ongkir: Rp8\.000/);
+    assert.match(msg, /━━━━━━━━━━━━━━━━/);
+    assert.match(msg, /💰 \*TOTAL PESANAN: Rp48\.000\*/);
 
     // ANTI-LEAK CHECKS: No internal admin, banter 10%, driver debt, driver loan
     assert.doesNotMatch(msg, /Bagian Admin/i);
@@ -259,27 +262,27 @@ test('Reconciliation Suite - Obligation categorization and compensation', async 
       distance_rounded_km: 3,
       is_rain: true,
       is_night: false,
-      extra_stops_count: 0,
+      extra_stops_count: 2,
       delivery_fee: 10500,
       admin_share: 500,
       banter_share: 1000,
       driver_delivery_share: 9000,
-      extra_fees_total: 5000,
-      driver_total_delivery_entitlement: 14000,
+      extra_fees_total: 9000,
+      driver_total_delivery_entitlement: 18000,
       total_shopping_cost: 0,
       driver_shopping_modal: 0,
       admin_shopping_modal: 0,
-      customer_total_bill: 15500,
-      driver_total_entitlement: 14000,
+      customer_total_bill: 19500,
+      driver_total_entitlement: 18000,
       customer_payment_status: 'unpaid',
       customer_paid_amount: 0,
-      customer_balance_remaining: 15500,
+      customer_balance_remaining: 19500,
       shopping_price_status: 'pending_driver',
       driver_payout_status: 'unpaid',
       driver_received_from_customer: 0,
       driver_transferred_by_admin: 0,
       driver_total_received: 0,
-      driver_balance_remaining: 14000,
+      driver_balance_remaining: 18000,
       status: 'pending',
       pricing_snapshot: {
         version: '1.0.0',
@@ -309,8 +312,12 @@ test('Reconciliation Suite - Obligation categorization and compensation', async 
     };
 
     const msg = generateCustomerWhatsAppMessage(dummyOrderPending);
-    assert.match(msg, /Harga menunggu konfirmasi Driver/i);
-    assert.match(msg, /Belum Final/i);
+    assert.match(msg, /1\. Buah Mangga Harum Manis 2kg \(2x\) - \(Harga menunggu konfirmasi\)/);
+    assert.match(msg, /- Ongkir: Rp8\.000/);
+    assert.match(msg, /- Jarak 3 KM: Rp2\.500/);
+    assert.match(msg, /- Tambah tempat: Rp4\.000/);
+    assert.match(msg, /- Biaya Hujan: Rp5\.000/);
+    assert.match(msg, /💰 \*TOTAL PESANAN: Rp19\.500 \+ Belanja \(Menunggu konfirmasi harga\)\*/);
   });
 
   await t.test('Scenario 6: Driver WhatsApp Message shows transparent breakdown and compensations', () => {

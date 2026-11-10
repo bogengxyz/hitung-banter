@@ -1,5 +1,6 @@
 import { CombinedOrderGroup } from '../../types';
 import { formatRupiah } from '../pricing/engine';
+export { generateCombinedCustomerWhatsAppMessage } from '../reconciliation/reconciliationEngine';
 
 /**
  * WhatsApp Message Templates for Order Gabungan (5 Tahapan + Daftar Belanja)

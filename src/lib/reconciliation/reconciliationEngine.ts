@@ -157,130 +157,219 @@ export function getCategoryLabel(category: ObligationCategory): string {
 }
 
 /**
- * GENERATE RINCIAN TAGIHAN CUSTOMER
+ * GENERATE DAFTAR PESANAN & RINCIAN BIAYA CUSTOMER (FORMAT BARU)
+ * Sederhana, rapi, transparan, dan mudah dibaca melalui WhatsApp.
  * Strictly prevents any internal accounting leakage (no admin cut, banter cut, driver debt, loans).
  */
 export function generateCustomerWhatsAppMessage(
   order: Order,
-  options?: { hideZero?: boolean }
+  _options?: { hideZero?: boolean }
 ): string {
   const lines: string[] = [];
 
-  // Header & Identity
-  lines.push(`*RINCIAN PESANAN BANTER*`);
-  lines.push(`Halo Kak ${order.customer_name}, berikut rincian pesanan Kakak:`);
-  lines.push(`Nomor Order: *${order.order_number}*`);
-  const dateFormatted = new Date(order.created_at).toLocaleDateString('id-ID', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-  lines.push(`Tanggal: ${dateFormatted}`);
-  lines.push(``);
+  // Header
+  lines.push('📋 *DAFTAR PESANAN*');
+  lines.push('');
 
-  // Rincian Belanja
-  const items = order.items || [];
-  let shoppingTotal = 0;
+  // 1. Daftar Barang
+  const rawItems = (order.items || []).filter((it) => it.item_status !== 'unavailable');
   let hasPendingPrice = order.shopping_price_status === 'pending_driver';
+  let confirmedShoppingTotal = 0;
 
-  if (items.length > 0) {
-    lines.push(`*DAFTAR BELANJA*`);
-    items.forEach((it) => {
-      const isKnown = it.is_price_known !== false && it.unit_price > 0 && it.item_status !== 'unavailable';
-      if (!isKnown && it.item_status !== 'unavailable') {
+  if (rawItems.length > 0) {
+    rawItems.forEach((it, idx) => {
+      const isKnown = it.is_price_known !== false && it.unit_price > 0;
+      const qtyStr = it.qty > 1 ? ` (${it.qty}x)` : '';
+      if (!isKnown) {
         hasPendingPrice = true;
-        lines.push(`• ${it.name}`);
-        lines.push(`  ${it.qty}x × _(Harga menunggu konfirmasi Driver)_`);
-      } else if (it.item_status === 'unavailable') {
-        lines.push(`• ~${it.name}~ _(Barang tidak tersedia / dibatalkan)_`);
+        lines.push(`${idx + 1}. ${it.name}${qtyStr} - (Harga menunggu konfirmasi)`);
       } else {
         const subtotal = it.qty * it.unit_price;
-        shoppingTotal += subtotal;
-        lines.push(`• ${it.name}`);
-        lines.push(`  ${it.qty} × ${formatRupiah(it.unit_price)} = ${formatRupiah(subtotal)}`);
+        confirmedShoppingTotal += subtotal;
+        lines.push(`${idx + 1}. ${it.name}${qtyStr} - ${formatRupiah(subtotal)}`);
       }
     });
-
-    if (hasPendingPrice) {
-      lines.push(`*Total Belanja:* _(Belum final - menunggu konfirmasi driver)_`);
-    } else {
-      lines.push(`*Total Belanja: ${formatRupiah(order.total_shopping_cost || shoppingTotal)}*`);
-    }
-    lines.push(``);
   } else if (order.total_shopping_cost > 0) {
-    lines.push(`*DAFTAR BELANJA*`);
-    lines.push(`• Belanja Makanan / Barang: ${formatRupiah(order.total_shopping_cost)}`);
-    lines.push(`*Total Belanja: ${formatRupiah(order.total_shopping_cost)}*`);
-    lines.push(``);
+    confirmedShoppingTotal = order.total_shopping_cost;
+    lines.push(`1. Belanja Barang / Makanan - ${formatRupiah(order.total_shopping_cost)}`);
+  } else {
+    // Layanan tanpa belanja fisik (e.g. Ojek / Antar Barang)
+    const serviceLabel =
+      order.service_type === 'ojek'
+        ? 'Layanan Ojek'
+        : order.service_type === 'antar_barang'
+        ? 'Pengantaran Barang'
+        : 'Jasa Pengantaran';
+    const route =
+      order.pickup_address && order.delivery_address
+        ? ` (${order.pickup_address} ➔ ${order.delivery_address})`
+        : '';
+    lines.push(`1. ${serviceLabel}${route}`);
   }
 
-  // Tempat Belanja / Lokasi
-  const locationsCount = 1 + (order.extra_stops_count || 0);
-  lines.push(`*TEMPAT BELANJA*`);
-  if (order.purchase_location) {
-    lines.push(`Lokasi: ${order.purchase_location}`);
-  }
-  lines.push(`Jumlah tempat: ${locationsCount} lokasi`);
-  if (order.pickup_address) {
-    lines.push(`Titik Ambil: ${order.pickup_address}`);
-  }
-  lines.push(`Titik Antar: ${order.delivery_address}`);
-  lines.push(``);
+  lines.push('');
 
-  // Rincian Ongkir & Biaya Tambahan
-  lines.push(`*BIAYA PENGANTARAN*`);
-  lines.push(`• Ongkir (${order.distance_rounded_km} KM): ${formatRupiah(order.delivery_fee)}`);
+  // 2. Rincian Biaya
+  lines.push('*Rincian Biaya:*');
 
-  let extraFeesShown = 0;
-  if (order.is_rain) {
-    lines.push(`• Biaya Hujan: ${formatRupiah(order.pricing_snapshot?.rain_fee || 5000)}`);
-    extraFeesShown += order.pricing_snapshot?.rain_fee || 5000;
+  // Breakdown Ongkir & Jarak
+  const cfg = order.pricing_snapshot;
+  const baseDist = cfg?.base_distance_km ?? 2;
+  const perKmRate = cfg?.per_km_rate ?? 2500;
+  const rawKm = order.distance_raw_km || order.distance_rounded_km || 0;
+  const roundedKm = order.distance_rounded_km || Math.round(rawKm);
+  const extraKm = Math.max(0, roundedKm - baseDist);
+  const extraKmFee = extraKm * perKmRate;
+  const baseDeliveryFee = order.delivery_fee - extraKmFee;
+
+  if (extraKm > 0 && extraKmFee > 0 && baseDeliveryFee > 0) {
+    lines.push(`- Ongkir: ${formatRupiah(baseDeliveryFee)}`);
+    const distFormatted = rawKm ? rawKm.toString().replace('.', ',') : roundedKm.toString();
+    lines.push(`- Jarak ${distFormatted} KM: ${formatRupiah(extraKmFee)}`);
+  } else if (order.delivery_fee > 0) {
+    lines.push(`- Ongkir: ${formatRupiah(order.delivery_fee)}`);
   }
-  if (order.is_night) {
-    lines.push(`• Biaya Jam Malam: ${formatRupiah(order.pricing_snapshot?.night_fee || 5000)}`);
-    extraFeesShown += order.pricing_snapshot?.night_fee || 5000;
-  }
+
+  // Tambah Tempat (Extra Stops)
   if (order.extra_stops_count > 0) {
     const stopsRate = order.pricing_snapshot?.extra_stop_rate || 2000;
     const stopsTotal = order.extra_stops_count * stopsRate;
-    lines.push(`• Biaya Tempat Tambahan (${order.extra_stops_count} titik): ${formatRupiah(stopsTotal)}`);
-    extraFeesShown += stopsTotal;
+    lines.push(`- Tambah tempat: ${formatRupiah(stopsTotal)}`);
   }
-  lines.push(``);
 
-  // Ringkasan Pembayaran
-  lines.push(`*TOTAL PEMBAYARAN*`);
+  // Biaya Hujan
+  if (order.is_rain) {
+    const rainFee = order.pricing_snapshot?.rain_fee || 5000;
+    lines.push(`- Biaya Hujan: ${formatRupiah(rainFee)}`);
+  }
+
+  // Biaya Jam Malam
+  if (order.is_night) {
+    const nightFee = order.pricing_snapshot?.night_fee || 5000;
+    lines.push(`- Biaya Jam Malam: ${formatRupiah(nightFee)}`);
+  }
+
+  // Custom Extra Fees if any remaining
+  const accountedExtra =
+    (order.extra_stops_count > 0 ? (order.pricing_snapshot?.extra_stop_rate || 2000) * order.extra_stops_count : 0) +
+    (order.is_rain ? (order.pricing_snapshot?.rain_fee || 5000) : 0) +
+    (order.is_night ? (order.pricing_snapshot?.night_fee || 5000) : 0);
+  const remainingExtra = (order.extra_fees_total || 0) - accountedExtra;
+  if (remainingExtra > 0) {
+    lines.push(`- Biaya Tambahan: ${formatRupiah(remainingExtra)}`);
+  }
+
+  lines.push('');
+  lines.push('━━━━━━━━━━━━━━━━');
+
+  // 3. Total Pesanan
   if (hasPendingPrice) {
-    lines.push(`• Belanja: _(Menunggu konfirmasi harga)_`);
-  } else if (order.total_shopping_cost > 0) {
-    lines.push(`• Belanja: ${formatRupiah(order.total_shopping_cost)}`);
-  }
-  lines.push(`• Ongkir: ${formatRupiah(order.delivery_fee)}`);
-  if (order.extra_fees_total > 0) {
-    lines.push(`• Biaya Tambahan: ${formatRupiah(order.extra_fees_total)}`);
-  }
-
-  if (hasPendingPrice) {
-    const baseKnownBill = order.delivery_fee + order.extra_fees_total;
-    lines.push(`*TOTAL TAGIHAN: ${formatRupiah(baseKnownBill)} + Belanja (Belum Final)*`);
-    lines.push(`_Harga barang final akan dikonfirmasi oleh driver setelah struk tercatat._`);
+    const knownBase = (order.delivery_fee || 0) + (order.extra_fees_total || 0) + confirmedShoppingTotal;
+    lines.push(`💰 *TOTAL PESANAN: ${formatRupiah(knownBase)} + Belanja (Menunggu konfirmasi harga)*`);
   } else {
-    lines.push(`*TOTAL TAGIHAN: ${formatRupiah(order.customer_total_bill)}*`);
+    lines.push(`💰 *TOTAL PESANAN: ${formatRupiah(order.customer_total_bill)}*`);
   }
 
-  const paidAmt = order.customer_paid_amount || 0;
-  lines.push(`Sudah Dibayar: ${formatRupiah(paidAmt)}`);
+  return lines.join('\n');
+}
 
-  if (!hasPendingPrice) {
-    const remaining = Math.max(0, order.customer_total_bill - paidAmt);
-    lines.push(`*Sisa Pembayaran: ${formatRupiah(remaining)}*`);
+/**
+ * GENERATE FORMAT SALIN PESANAN UNTUK CUSTOMER DI ORDER GABUNGAN
+ * Setiap customer hanya menerima rincian pesanan dan total pembayarannya sendiri.
+ */
+export function generateCombinedCustomerWhatsAppMessage(
+  cust: import('../../types').CombinedOrderCustomer,
+  group?: import('../../types').CombinedOrderGroup
+): string {
+  const lines: string[] = [];
+
+  // Header
+  lines.push('📋 *DAFTAR PESANAN*');
+  lines.push('');
+
+  // 1. Daftar Barang (seluruh tempat dirangkum berurutan)
+  const allItems: { name: string; qty: number; unitPrice: number; totalPrice: number; isUnconfirmed?: boolean }[] = [];
+  (cust.locations || []).forEach((loc) => {
+    (loc.items || []).forEach((it) => {
+      allItems.push({
+        name: it.name,
+        qty: Math.max(1, it.qty || 1),
+        unitPrice: Math.max(0, it.unit_price || 0),
+        totalPrice: Math.max(0, it.total_price || (it.qty * it.unit_price) || 0),
+        isUnconfirmed: it.is_price_unconfirmed || it.unit_price === 0,
+      });
+    });
+  });
+
+  let hasPending = cust.has_unconfirmed_prices || false;
+  let confirmedShopping = 0;
+
+  if (allItems.length > 0) {
+    allItems.forEach((it, idx) => {
+      const qtyStr = it.qty > 1 ? ` (${it.qty}x)` : '';
+      if (it.isUnconfirmed) {
+        hasPending = true;
+        lines.push(`${idx + 1}. ${it.name}${qtyStr} - (Harga menunggu konfirmasi)`);
+      } else {
+        confirmedShopping += it.totalPrice;
+        lines.push(`${idx + 1}. ${it.name}${qtyStr} - ${formatRupiah(it.totalPrice)}`);
+      }
+    });
+  } else if (cust.shopping_subtotal > 0) {
+    confirmedShopping = cust.shopping_subtotal;
+    lines.push(`1. Belanja Barang / Makanan - ${formatRupiah(cust.shopping_subtotal)}`);
   } else {
-    const remOngkir = Math.max(0, (order.delivery_fee + order.extra_fees_total) - paidAmt);
-    lines.push(`*Sisa Pembayaran Ongkir: ${formatRupiah(remOngkir)}*`);
+    lines.push(`1. Layanan Pesanan Gabungan (${cust.delivery_address})`);
   }
 
-  lines.push(``);
-  lines.push(`Terima kasih telah menggunakan layanan *BANTER*.`);
+  lines.push('');
+
+  // 2. Rincian Biaya
+  lines.push('*Rincian Biaya:*');
+
+  // Ongkir & Jarak Customer
+  const rawKm = cust.distance_km || 0;
+  const roundedKm = Math.round(rawKm);
+  const extraKm = Math.max(0, roundedKm - 2);
+  const extraKmFee = extraKm * 2500;
+  const baseDeliveryFee = cust.delivery_fee - extraKmFee;
+
+  if (extraKm > 0 && extraKmFee > 0 && baseDeliveryFee > 0) {
+    lines.push(`- Ongkir: ${formatRupiah(baseDeliveryFee)}`);
+    const distFormatted = rawKm.toString().replace('.', ',');
+    lines.push(`- Jarak ${distFormatted} KM: ${formatRupiah(extraKmFee)}`);
+  } else if (cust.delivery_fee > 0) {
+    lines.push(`- Ongkir: ${formatRupiah(cust.delivery_fee)}`);
+  }
+
+  // Tambah Tempat (jika customer belanja di lebih dari 1 lokasi)
+  const locCount = (cust.locations || []).length;
+  const extraLocs = Math.max(0, locCount - 1);
+  if (extraLocs > 0) {
+    lines.push(`- Tambah tempat: ${formatRupiah(extraLocs * 2000)}`);
+  }
+
+  // Hujan & Malam (jika ada pada grup)
+  if (group?.is_rain) {
+    lines.push(`- Biaya Hujan: ${formatRupiah(group.rain_fee || 5000)}`);
+  }
+  if (group?.is_night) {
+    lines.push(`- Biaya Jam Malam: ${formatRupiah(group.night_fee || 5000)}`);
+  }
+
+  lines.push('');
+  lines.push('━━━━━━━━━━━━━━━━');
+
+  // 3. Total Pesanan
+  if (hasPending) {
+    const extraLocsFee = extraLocs * 2000;
+    const rainFee = group?.is_rain ? (group.rain_fee || 5000) : 0;
+    const nightFee = group?.is_night ? (group.night_fee || 5000) : 0;
+    const knownTotal = cust.delivery_fee + extraLocsFee + rainFee + nightFee + confirmedShopping;
+    lines.push(`💰 *TOTAL PESANAN: ${formatRupiah(knownTotal)} + Belanja (Menunggu konfirmasi harga)*`);
+  } else {
+    lines.push(`💰 *TOTAL PESANAN: ${formatRupiah(cust.customer_total_bill)}*`);
+  }
 
   return lines.join('\n');
 }
