@@ -1,0 +1,1335 @@
+# MASTER PROMPT — PEMBANGUNAN APLIKASI HITUNG BANTER
+
+## 1. PERAN AI DAN TUJUAN PROYEK
+
+Bertindaklah sebagai tim pengembang perangkat lunak profesional yang terdiri dari:
+
+- Senior Full-Stack Developer
+- Software Architect
+- UI/UX Designer
+- Database Architect
+- PostgreSQL Developer
+- Financial System Engineer
+- Flutter Android Developer
+- Quality Assurance Engineer
+- Application Security Engineer
+
+Tugas utama adalah membangun aplikasi bernama **HITUNG BANTER** secara menyeluruh, terintegrasi, dan siap dikembangkan menjadi aplikasi operasional.
+
+Jangan hanya membuat desain, mockup, prototype statis, atau dashboard dengan data palsu.
+
+Bangun aplikasi dengan struktur kode yang rapi, komponen yang dapat digunakan kembali, database yang terstruktur, autentikasi, validasi, dan proses bisnis yang benar-benar berfungsi.
+
+Jika ada layanan eksternal yang membutuhkan kredensial, siapkan integrasi dan file konfigurasi `.env.example`. Jangan mengarang API key, URL proyek, atau kredensial.
+
+Jika koneksi Supabase belum tersedia, buat struktur aplikasi dan migrasi SQL terlebih dahulu, kemudian jelaskan konfigurasi yang masih membutuhkan tindakan pemilik proyek.
+
+Jangan mengklaim fitur backend sudah aktif jika belum benar-benar terhubung dan diuji.
+
+---
+
+# 2. IDENTITAS APLIKASI
+
+Nama aplikasi: HITUNG BANTER
+
+Deskripsi:
+Aplikasi kalkulator, pengelolaan pembayaran, dan pembukuan keuangan driver BANTER.
+
+Tujuan utama:
+
+1. Menghitung pembagian ongkir antara Admin, BANTER, dan Driver.
+2. Menghitung total hak pembayaran setiap driver.
+3. Mencatat pembayaran customer melalui Cash, QRIS, dan Transfer.
+4. Mencatat uang yang diterima Admin maupun Driver.
+5. Memisahkan sumber modal Admin dan modal Driver.
+6. Menghitung penggantian uang belanja yang dikeluarkan driver.
+7. Mencatat pembayaran yang sudah diterima driver.
+8. Menampilkan sisa pembayaran yang masih menjadi hak driver.
+9. Mengelola riwayat transaksi dan koreksi keuangan.
+10. Menyediakan laporan keuangan yang transparan dan dapat ditelusuri.
+
+Bahasa seluruh antarmuka: Bahasa Indonesia.
+
+Mata uang: Rupiah (IDR).
+
+Format nominal: Rp10.000, tanpa angka desimal.
+
+Zona waktu: Asia/Jakarta.
+
+Target pengguna:
+- Owner atau pemilik.
+- Admin operasional.
+- Admin keuangan.
+- Admin lain yang mendapatkan izin akses.
+
+Platform:
+- Website responsif.
+- Browser laptop dan komputer.
+- Browser Android.
+- Aplikasi Android yang dikemas menggunakan Flutter WebView.
+
+---
+
+# 3. TEKNOLOGI DAN ARSITEKTUR
+
+Gunakan teknologi berikut:
+
+| Kebutuhan | Teknologi |
+|---|---|
+| Website | Next.js |
+| Bahasa | TypeScript |
+| UI | Tailwind CSS |
+| Komponen UI | shadcn/ui atau komponen reusable sejenis |
+| Ikon | Lucide |
+| Database | Supabase PostgreSQL |
+| Autentikasi | Supabase Auth |
+| Hak akses | Role-Based Access Control + RLS |
+| Realtime | Supabase Realtime |
+| File | Supabase Storage |
+| Proses keuangan | PostgreSQL Functions dan/atau Edge Functions |
+| Hosting website | Cloudflare Pages atau Cloudflare Workers |
+| Android | Flutter WebView |
+| Format data | Rupiah integer (BIGINT) |
+
+Gunakan arsitektur yang konsisten dan mudah dipelihara.
+
+Pemisahan tanggung jawab:
+- Frontend hanya mengelola tampilan dan interaksi.
+- Backend memvalidasi proses bisnis.
+- Database menjadi sumber data utama.
+- Semua perhitungan keuangan penting dilakukan di backend atau database.
+- Jangan mempercayai nominal hasil perhitungan dari browser tanpa validasi ulang.
+
+Jangan membuat database lokal terpisah untuk setiap perangkat.
+
+Semua admin, baik melalui laptop, browser Android, maupun aplikasi Android, harus mengakses satu database pusat yang sama.
+
+Gunakan server-side access untuk operasi yang memerlukan hak istimewa.
+
+Jangan pernah memasukkan SUPABASE_SERVICE_ROLE_KEY ke frontend atau aplikasi Android.
+
+Gunakan environment variables untuk semua kredensial.
+
+Siapkan:
+- `.env.example`
+- Dokumentasi instalasi.
+- Dokumentasi koneksi Supabase.
+- SQL migrations.
+- Dokumentasi deployment Cloudflare.
+- Dokumentasi build Flutter Android.
+
+---
+
+# 4. KONSEP DAN ALUR UTAMA APLIKASI
+
+HITUNG BANTER bukan sekadar kalkulator ongkir.
+
+Aplikasi ini merupakan sistem pembukuan hak pembayaran driver.
+
+Setiap pesanan harus bisa ditelusuri dari awal sampai selesai:
+
+1. Admin membuat atau memasukkan pesanan.
+2. Admin memasukkan jarak dan tarif.
+3. Sistem menghitung ongkir.
+4. Sistem menghitung bagian Admin, BANTER, dan Driver.
+5. Admin mencatat biaya belanja.
+6. Admin menentukan sumber modal setiap pengeluaran.
+7. Admin mencatat pembayaran customer.
+8. Sistem mencatat siapa yang menerima uang customer.
+9. Admin mencatat pembayaran kepada driver.
+10. Sistem menghitung hak driver yang belum dibayarkan.
+11. Semua aktivitas masuk ke riwayat transaksi dan audit log.
+
+Satu pesanan dapat memiliki beberapa item belanja dan beberapa sumber modal.
+
+Jangan menganggap seluruh uang yang diterima driver sebagai penghasilan driver.
+
+Uang customer yang diterima driver harus bisa dialokasikan berdasarkan tujuan penggunaannya.
+
+---
+
+# 5. SISTEM AKUN DAN HAK AKSES
+
+Buat sistem multi-admin dengan akun masing-masing.
+
+Jangan menggunakan satu akun bersama untuk seluruh admin.
+
+Buat tiga role utama:
+
+## A. Owner
+
+Hak akses:
+- Akses penuh seluruh aplikasi.
+- Melihat semua laporan.
+- Membuat dan menonaktifkan akun admin.
+- Mengatur role dan izin.
+- Mengatur konfigurasi tarif.
+- Melihat seluruh transaksi.
+- Melakukan koreksi transaksi dengan alasan.
+- Melihat audit log.
+- Melakukan rekonsiliasi.
+- Mengelola backup dan pengaturan sistem jika tersedia.
+
+## B. Admin
+
+Hak akses berdasarkan izin yang diberikan Owner.
+
+Izin yang dapat diatur:
+- Mengelola pesanan.
+- Mengelola driver.
+- Mengelola pembayaran customer.
+- Mengelola modal.
+- Mencatat pembayaran driver.
+- Melihat laporan.
+- Melakukan koreksi jika diizinkan.
+
+## C. Viewer
+
+Hak akses:
+- Melihat data yang diizinkan.
+- Melihat laporan.
+- Tidak dapat membuat, mengubah, atau menghapus transaksi.
+
+Persyaratan:
+- Gunakan Supabase Auth.
+- Buat tabel profil pengguna.
+- Gunakan Role-Based Access Control.
+- Gunakan PostgreSQL Row Level Security (RLS).
+- Jangan hanya menyembunyikan tombol pada frontend.
+- Semua pembatasan harus divalidasi di database/backend.
+- Pengguna yang dinonaktifkan tidak boleh melakukan transaksi baru.
+
+Buat halaman:
+- Login.
+- Logout.
+- Profil pengguna.
+- Manajemen pengguna.
+- Manajemen role dan izin.
+
+Owner adalah akun pertama yang harus disiapkan melalui prosedur bootstrap yang aman. Jangan membuat akun Owner dengan password default.
+
+---
+
+# 6. SISTEM TARIF BANTER
+
+Implementasikan satu Pricing Engine sebagai pusat perhitungan tarif.
+
+Jangan membuat formula ongkir yang berbeda-beda pada setiap halaman.
+
+Seluruh kalkulator, pesanan, dan laporan harus menggunakan mesin perhitungan yang sama.
+
+## A. Tarif reguler
+
+Aturan jarak:
+
+- Jarak 0–2 KM: Rp8.000.
+- Di atas 2 KM: tambahan Rp2.500 per KM.
+- Pembulatan jarak ke KM terdekat dengan aturan setengah ke atas.
+- 2,49 KM menjadi 2 KM.
+- 2,5 KM menjadi 3 KM.
+- 3,5 KM menjadi 4 KM.
+
+Formula:
+
+`rounded_distance = floor(distance_km + 0.5)`
+
+`ongkir = 8000 + max(rounded_distance - 2, 0) * 2500`
+
+## B. Pembagian Admin
+
+Admin mendapatkan potongan Rp500 untuk setiap KM di atas 2 KM, maksimal Rp2.000.
+
+Formula:
+
+`admin_share = min(max(rounded_distance - 2, 0) * 500, 2000)`
+
+Ketentuan:
+- Jarak 2 KM atau kurang: Admin Rp0.
+- Jarak 3 KM: Admin Rp500.
+- Jarak 4 KM: Admin Rp1.000.
+- Jarak 5 KM: Admin Rp1.500.
+- Jarak 6 KM atau lebih: maksimal Rp2.000.
+
+## C. Pembagian BANTER
+
+BANTER mendapatkan 10% dari ongkir setelah dikurangi bagian Admin.
+
+Formula:
+
+`banter_share = 10% * (ongkir - admin_share)`
+
+Gunakan pembulatan Rupiah yang konsisten dan terdokumentasi.
+
+## D. Hak Driver
+
+Formula:
+
+`driver_delivery_entitlement = ongkir - admin_share - banter_share`
+
+## E. Contoh hasil perhitungan
+
+| Jarak | Ongkir | Admin | BANTER | Driver |
+|---|---:|---:|---:|---:|
+| 2 KM | Rp8.000 | Rp0 | Rp800 | Rp7.200 |
+| 3 KM | Rp10.500 | Rp500 | Rp1.000 | Rp9.000 |
+| 4 KM | Rp13.000 | Rp1.000 | Rp1.200 | Rp10.800 |
+| 5 KM | Rp15.500 | Rp1.500 | Rp1.400 | Rp12.600 |
+| 6 KM | Rp18.000 | Rp2.000 | Rp1.600 | Rp14.400 |
+| 7 KM | Rp20.500 | Rp2.000 | Rp1.850 | Rp16.650 |
+
+Pastikan hasil aplikasi sama dengan contoh tersebut.
+
+## F. Biaya tambahan
+
+Biaya berikut dibebankan kepada customer dan 100% menjadi hak Driver:
+
+| Jenis | Tarif |
+|---|---:|
+| Biaya hujan | Rp5.000 |
+| Biaya order malam | Rp5.000 |
+| Tambahan tempat pemberhentian/pembelian | Rp2.000 per tempat tambahan |
+
+Contoh:
+- Satu tempat tambahan: Rp2.000.
+- Dua tempat tambahan: Rp4.000.
+- Tiga tempat tambahan: Rp6.000.
+
+Biaya tambahan tidak dikenai potongan Admin atau BANTER.
+
+Formula:
+
+`driver_extra_entitlement = rain_fee + night_fee + extra_location_fee`
+
+`driver_total_entitlement = driver_delivery_entitlement + driver_extra_entitlement`
+
+Tampilkan rincian pembagian secara transparan.
+
+## G. Konfigurasi tarif
+
+Buat halaman pengaturan tarif agar Owner dapat mengubah tarif di masa mendatang.
+
+Namun:
+- Perubahan tarif tidak boleh mengubah transaksi lama.
+- Setiap transaksi harus menyimpan snapshot tarif yang digunakan.
+- Simpan versi aturan tarif.
+- Setiap perubahan tarif dicatat di audit log.
+- Perubahan tarif harus memiliki tanggal mulai berlaku.
+
+---
+
+# 7. MODUL KALKULATOR
+
+Buat menu Kalkulator.
+
+Input:
+- Pilih driver.
+- Jarak KM.
+- Biaya hujan (opsional).
+- Biaya order malam (opsional).
+- Jumlah tempat tambahan.
+- Catatan.
+
+Output:
+- Jarak sebelum pembulatan.
+- Jarak setelah pembulatan.
+- Ongkir customer.
+- Potongan Admin.
+- Potongan BANTER.
+- Hak ongkir Driver.
+- Biaya tambahan.
+- Total pembayaran customer.
+- Total hak Driver.
+
+Buat tampilan hasil yang mudah dibaca.
+
+Sediakan tombol:
+- Simpan sebagai pesanan.
+- Salin rincian.
+- Buat transaksi baru.
+
+Jangan menyimpan hasil kalkulasi sebagai transaksi keuangan final sebelum pengguna menekan tombol simpan.
+
+---
+
+# 8. MODUL PESANAN
+
+Buat halaman daftar pesanan dengan filter:
+
+- Semua.
+- Draft.
+- Menunggu pembayaran.
+- Selesai.
+- Belum lunas kepada Driver.
+- Sudah lunas kepada Driver.
+- Dibatalkan.
+
+Setiap pesanan memiliki:
+
+- ID unik.
+- Nomor pesanan.
+- Tanggal dan waktu.
+- Nama customer.
+- Nama driver.
+- Jarak.
+- Tarif ongkir.
+- Pembagian Admin.
+- Pembagian BANTER.
+- Hak Driver.
+- Biaya tambahan.
+- Total belanja.
+- Sumber modal.
+- Pembayaran customer.
+- Pembayaran Driver.
+- Status pembayaran.
+- Catatan.
+
+Buat halaman detail pesanan yang menampilkan seluruh alur keuangannya.
+
+Pesanan yang sudah selesai tidak boleh hilang dari riwayat.
+
+Pembatalan harus memiliki alasan dan prosedur pembalikan transaksi yang sesuai.
+
+---
+
+# 9. MODUL BELANJA DAN SUMBER MODAL
+
+Satu pesanan dapat memiliki beberapa pengeluaran.
+
+Setiap pengeluaran harus mempunyai sumber modal yang jelas.
+
+Pilihan sumber modal:
+
+1. Modal Admin.
+2. Modal Driver.
+
+Buat tabel item pengeluaran.
+
+Contoh:
+
+Pesanan A:
+- Belanja Rp25.000 dari modal Driver.
+- Belanja Rp15.000 dari modal Admin.
+
+Total belanja Rp40.000.
+
+Maka:
+- Penggantian uang kepada Driver = Rp25.000.
+- Modal Admin yang digunakan = Rp15.000.
+- Jangan menganggap seluruh Rp40.000 sebagai utang kepada Driver.
+
+Setiap item belanja memiliki:
+- Nama item.
+- Nominal.
+- Sumber modal.
+- Waktu transaksi.
+- Bukti foto struk (opsional).
+- Catatan.
+- Pembuat transaksi.
+
+Dukung beberapa item dan sumber modal dalam satu pesanan.
+
+Jika satu item dibayar dari dua sumber modal, pecah menjadi dua catatan alokasi pengeluaran.
+
+---
+
+# 10. MODUL PEMBAYARAN CUSTOMER
+
+Buat pencatatan penerimaan uang customer.
+
+Metode pembayaran:
+
+- Cash.
+- QRIS.
+- Transfer.
+
+Penerima pembayaran:
+
+- Admin.
+- Driver.
+
+Kedua hal ini harus menjadi field terpisah.
+
+Contoh:
+- Cash diterima Driver.
+- Cash diterima Admin.
+- QRIS diterima Admin.
+- QRIS diterima Driver.
+- Transfer diterima Admin.
+- Transfer diterima Driver.
+
+Setiap penerimaan memiliki:
+- ID transaksi.
+- Pesanan terkait.
+- Nominal.
+- Metode pembayaran.
+- Penerima.
+- Tanggal dan waktu.
+- Referensi transaksi jika ada.
+- Bukti pembayaran jika ada.
+- Catatan.
+- Admin pencatat.
+
+## Alokasi penerimaan
+
+Uang yang diterima tidak boleh otomatis dianggap sebagai hak Driver.
+
+Sediakan fitur alokasi penerimaan untuk membedakan:
+
+- Uang belanja.
+- Ongkir.
+- Biaya tambahan.
+- Uang titipan.
+- Kembalian.
+- Komponen lainnya jika diperlukan.
+
+Contoh:
+
+Customer memberikan Rp50.000 secara cash kepada Driver.
+
+Alokasi:
+- Belanja: Rp30.000.
+- Ongkir: Rp10.000.
+- Biaya tambahan: Rp5.000.
+- Kembalian: Rp5.000.
+
+Sistem tidak boleh menganggap seluruh Rp50.000 sebagai pendapatan atau pembayaran Driver.
+
+Pastikan jumlah alokasi tidak melebihi penerimaan yang tercatat.
+
+---
+
+# 11. MODUL HAK PEMBAYARAN DRIVER
+
+Ini merupakan salah satu modul terpenting.
+
+Sistem harus menghitung hak pembayaran setiap Driver secara otomatis.
+
+Formula dasar:
+
+`driver_entitlement = driver_shopping_reimbursement + driver_delivery_entitlement + driver_extra_entitlement`
+
+Keterangan:
+- `driver_shopping_reimbursement`: pengeluaran belanja yang benar-benar berasal dari uang pribadi Driver.
+- `driver_delivery_entitlement`: hak ongkir setelah potongan Admin dan BANTER.
+- `driver_extra_entitlement`: biaya tambahan yang seluruhnya menjadi hak Driver.
+
+Jangan memasukkan belanja yang berasal dari modal Admin sebagai penggantian uang Driver.
+
+## Pembayaran yang sudah diterima Driver
+
+Catat dua jenis penerimaan:
+
+1. Pembayaran customer yang diterima Driver dan dialokasikan untuk memenuhi hak pembayaran Driver.
+2. Transfer pembayaran dari Admin kepada Driver yang benar-benar telah diterima.
+
+Jangan menghitung pembayaran customer yang diterima Admin sebagai pembayaran kepada Driver.
+
+Formula:
+
+`remaining_driver_payment = driver_entitlement - driver_received_allocated`
+
+Interpretasi:
+
+- Positif: masih ada hak pembayaran Driver yang belum dibayarkan.
+- Nol: hak pembayaran sudah lunas.
+- Negatif: terdapat kelebihan pembayaran yang harus ditampilkan sebagai kondisi khusus untuk rekonsiliasi.
+
+Jangan otomatis mengubah kelebihan pembayaran menjadi utang Driver tanpa proses dan persetujuan yang jelas.
+
+Tampilkan:
+- Total hak Driver.
+- Total penggantian belanja.
+- Total hak ongkir.
+- Total biaya tambahan.
+- Sudah diterima Driver.
+- Sudah ditransfer Admin.
+- Sisa hak pembayaran.
+- Status pembayaran.
+
+Status:
+- Belum dibayar.
+- Dibayar sebagian.
+- Lunas.
+- Kelebihan pembayaran.
+
+---
+
+# 12. MODUL PEMBAYARAN KEPADA DRIVER
+
+Buat halaman pembayaran Driver.
+
+Fitur:
+- Pilih Driver.
+- Pilih satu atau beberapa pesanan.
+- Lihat total hak pembayaran.
+- Lihat total pembayaran sebelumnya.
+- Masukkan nominal pembayaran.
+- Pilih metode pembayaran.
+- Catatan.
+- Upload bukti transfer.
+- Simpan pembayaran.
+
+Metode:
+- Cash.
+- Transfer.
+- QRIS jika relevan.
+
+Setiap pembayaran harus memiliki nomor referensi unik.
+
+Sediakan pembayaran gabungan untuk beberapa pesanan.
+
+Sistem harus membuat alokasi pembayaran terhadap masing-masing pesanan.
+
+Contoh:
+Driver memiliki hak Rp100.000 dari tiga pesanan.
+
+Admin mentransfer Rp60.000.
+
+Sistem mencatat:
+- Total hak: Rp100.000.
+- Sudah dibayar: Rp60.000.
+- Sisa: Rp40.000.
+
+Jangan mengubah nominal hak awal ketika pembayaran dilakukan.
+
+---
+
+# 13. DASHBOARD UTAMA
+
+Buat dashboard yang langsung menunjukkan kondisi keuangan.
+
+Tampilkan kartu ringkasan:
+
+- Total pesanan hari ini.
+- Total ongkir customer.
+- Total bagian Admin.
+- Total bagian BANTER.
+- Total hak Driver.
+- Total pengeluaran belanja.
+- Total modal Admin.
+- Total modal Driver.
+- Total pembayaran customer.
+- Total pembayaran Driver.
+- Total hak Driver yang belum dibayar.
+
+Tambahkan grafik:
+- Transaksi harian.
+- Pembayaran Driver.
+- Pendapatan Admin dan BANTER.
+- Perbandingan sumber modal.
+- Tren pesanan.
+
+Tambahkan daftar:
+- Transaksi terbaru.
+- Driver dengan pembayaran tertunda.
+- Pesanan belum selesai.
+- Aktivitas admin terbaru.
+
+Pastikan setiap kartu dan grafik mengambil data aktual dari database.
+
+Jangan menggunakan angka statis atau dummy setelah database terhubung.
+
+---
+
+# 14. MODUL DRIVER
+
+Buat manajemen data Driver.
+
+Data:
+- Nama.
+- Nomor telepon.
+- Identitas atau kode Driver.
+- Status aktif/nonaktif.
+- Tanggal bergabung.
+- Catatan.
+
+Halaman detail Driver harus memiliki:
+
+- Profil.
+- Total pesanan.
+- Total hak pembayaran.
+- Total penggantian belanja.
+- Total ongkir bersih.
+- Total biaya tambahan.
+- Total pembayaran diterima.
+- Sisa pembayaran.
+- Riwayat transaksi.
+- Riwayat pembayaran.
+
+Sediakan pencarian berdasarkan nama atau nomor Driver.
+
+---
+
+# 15. MODUL LAPORAN KEUANGAN
+
+Buat laporan dengan filter:
+
+- Hari ini.
+- Kemarin.
+- Minggu ini.
+- Bulan ini.
+- Rentang tanggal khusus.
+- Driver.
+- Admin pencatat.
+- Metode pembayaran.
+- Sumber modal.
+- Status pembayaran.
+
+Jenis laporan:
+
+1. Laporan transaksi pesanan.
+2. Laporan ongkir.
+3. Laporan pembagian Admin.
+4. Laporan bagian BANTER.
+5. Laporan hak Driver.
+6. Laporan modal Admin.
+7. Laporan modal Driver.
+8. Laporan penerimaan Cash.
+9. Laporan penerimaan QRIS.
+10. Laporan penerimaan Transfer.
+11. Laporan pembayaran Driver.
+12. Laporan sisa hak pembayaran Driver.
+13. Laporan koreksi transaksi.
+
+Sediakan:
+- Export Excel.
+- Export CSV.
+- Print laporan.
+- Tampilan PDF jika memungkinkan.
+
+Pastikan laporan menggunakan query database yang benar dan tidak menghitung transaksi yang sudah dibalik dua kali.
+
+---
+
+# 16. SISTEM AUDIT DAN KOREKSI KEUANGAN
+
+Ini merupakan persyaratan wajib.
+
+Riwayat keuangan tidak boleh hilang atau berubah tanpa jejak.
+
+Jangan menyediakan tombol hapus permanen untuk transaksi keuangan yang sudah tercatat.
+
+Gunakan sistem:
+- Audit log.
+- Koreksi.
+- Reversal.
+- Pembatalan.
+- Riwayat perubahan.
+
+Setiap perubahan harus menyimpan:
+- ID transaksi.
+- Pengguna yang melakukan perubahan.
+- Tanggal dan waktu.
+- Nilai sebelum.
+- Nilai sesudah.
+- Alasan perubahan.
+- Jenis perubahan.
+- Referensi transaksi asal.
+
+Jika transaksi salah:
+1. Buat koreksi dengan alasan.
+2. Simpan nilai lama.
+3. Simpan nilai baru.
+4. Catat identitas admin.
+5. Simpan waktu perubahan.
+6. Hitung ulang saldo dan hak pembayaran secara konsisten.
+
+Jika pesanan dibatalkan setelah transaksi keuangan tercatat, buat transaksi pembalik yang saling terhubung dengan transaksi asal.
+
+Jangan menghapus bukti transaksi yang sudah tersimpan.
+
+Batasi koreksi sensitif hanya untuk role yang memiliki izin.
+
+Audit log tidak boleh dapat diubah oleh admin biasa.
+
+---
+
+# 17. DESAIN DATABASE SUPABASE POSTGRESQL
+
+Buat database relasional yang terstruktur.
+
+Minimal siapkan tabel berikut:
+
+## Identitas dan akses
+
+- profiles
+- roles
+- permissions
+- role_permissions
+
+## Driver dan pesanan
+
+- drivers
+- orders
+- order_status_history
+- tariff_versions
+- order_pricing_snapshots
+
+## Belanja dan modal
+
+- expense_items
+- expense_funding_allocations
+
+## Pembayaran customer
+
+- customer_receipts
+- receipt_allocations
+
+## Hak dan pembayaran Driver
+
+- driver_entitlements
+- driver_payments
+- payment_allocations
+
+## Keuangan dan audit
+
+- financial_transactions
+- transaction_reversals
+- audit_logs
+
+## Sistem
+
+- app_settings
+- file_attachments
+- notifications
+
+Gunakan:
+- UUID untuk primary key.
+- Foreign key.
+- Check constraints.
+- Unique constraints.
+- Index pada kolom pencarian dan relasi.
+- Created_at dan updated_at.
+- Created_by dan updated_by jika relevan.
+- BIGINT untuk nominal Rupiah.
+- Numeric untuk jarak.
+- Timestamp dengan timezone.
+
+Jangan menyimpan nominal Rupiah sebagai floating point.
+
+Buat migration SQL yang dapat dijalankan berurutan.
+
+Buat relasi database yang benar dan hindari duplikasi data.
+
+Untuk transaksi keuangan yang saling berkaitan, gunakan PostgreSQL transaction agar seluruh operasi berhasil atau seluruhnya dibatalkan.
+
+Buat PostgreSQL Functions untuk proses penting seperti:
+- Menghitung tarif.
+- Menyimpan pesanan dan snapshot tarif.
+- Mencatat penerimaan customer.
+- Mengalokasikan penerimaan.
+- Menghitung hak Driver.
+- Mencatat pembayaran Driver.
+- Melakukan koreksi.
+- Membuat reversal.
+
+Gunakan mekanisme idempotency atau unique request key pada proses yang berisiko dikirim berulang agar tidak terjadi transaksi ganda.
+
+Pastikan RLS aktif pada tabel yang menyimpan data penting.
+
+Jangan memberikan akses publik ke seluruh data keuangan.
+
+---
+
+# 18. SISTEM REALTIME
+
+Gunakan Supabase Realtime untuk memperbarui informasi antar-admin.
+
+Contoh:
+- Admin A membuat pesanan.
+- Admin B melihat pesanan baru tanpa harus memuat ulang halaman.
+- Admin A mencatat pembayaran.
+- Dashboard Admin B ikut diperbarui.
+- Pembayaran Driver berubah.
+- Detail Driver ikut diperbarui.
+
+Realtime tidak boleh digunakan sebagai pengganti validasi database.
+
+Tangani:
+- Koneksi terputus.
+- Reconnect.
+- Loading.
+- Data yang belum tersinkron.
+- Konflik perubahan.
+- Pengiriman transaksi berulang.
+
+Tampilkan indikator status koneksi.
+
+---
+
+# 19. PENYIMPANAN FILE
+
+Gunakan Supabase Storage.
+
+Buat bucket yang sesuai, misalnya:
+- payment-proofs
+- shopping-receipts
+- transaction-attachments
+
+Persyaratan:
+- File harus terkait dengan transaksi.
+- Akses file dibatasi menggunakan kebijakan keamanan.
+- Jangan menjadikan bucket bukti keuangan dapat diakses publik tanpa alasan.
+- Gunakan signed URL jika diperlukan.
+- Batasi tipe dan ukuran file.
+- Simpan metadata file di database.
+- Jangan menghapus file bukti yang terkait dengan transaksi yang sudah final tanpa prosedur khusus.
+
+---
+
+# 20. DESAIN UI/UX
+
+Buat desain modern, profesional, bersih, sederhana, dan mudah digunakan oleh admin operasional.
+
+Identitas visual:
+- Nama: HITUNG BANTER.
+- Gaya: modern financial dashboard.
+- Warna utama: biru tua atau navy.
+- Warna sekunder: putih.
+- Latar: putih atau abu-abu sangat muda.
+- Warna status: hijau untuk lunas, kuning untuk menunggu, merah untuk masalah, abu-abu untuk netral.
+
+Jangan menggunakan desain yang terlalu ramai.
+
+Hindari gradient berlebihan, animasi berlebihan, dan dekorasi yang mengganggu pembukuan.
+
+Gunakan tipografi yang jelas dan nominal Rupiah yang mudah dibaca.
+
+## Layout Desktop
+
+Sidebar kiri:
+1. Dashboard.
+2. Kalkulator.
+3. Pesanan.
+4. Driver.
+5. Pembayaran Customer.
+6. Pembayaran Driver.
+7. Modal dan Pengeluaran.
+8. Laporan Keuangan.
+9. Riwayat dan Audit.
+10. Pengaturan.
+11. Manajemen Admin.
+
+Header:
+- Logo/nama HITUNG BANTER.
+- Pencarian.
+- Notifikasi.
+- Status koneksi.
+- Profil admin.
+
+## Layout Mobile
+
+Buat desain responsif untuk layar Android.
+
+Gunakan:
+- Sidebar yang berubah menjadi drawer.
+- Navigasi bawah untuk menu utama jika sesuai.
+- Tombol berukuran nyaman disentuh.
+- Form tidak terlalu panjang.
+- Tabel berubah menjadi kartu transaksi pada layar kecil.
+- Nominal penting tetap terlihat.
+- Tidak ada horizontal overflow.
+
+Buat halaman:
+- Login.
+- Dashboard.
+- Kalkulator.
+- Form pesanan.
+- Detail pesanan.
+- Daftar Driver.
+- Detail Driver.
+- Penerimaan customer.
+- Pembayaran Driver.
+- Pengeluaran dan modal.
+- Laporan.
+- Audit log.
+- Pengaturan tarif.
+- Manajemen pengguna.
+
+Setiap halaman harus mempunyai loading state, empty state, error state, dan success feedback.
+
+---
+
+# 21. FLUTTER ANDROID WEBVIEW
+
+Siapkan folder terpisah untuk aplikasi Android:
+
+`/mobile/android_wrapper/`
+
+Buat aplikasi Flutter yang berfungsi sebagai pembungkus website HITUNG BANTER.
+
+Persyaratan:
+- Menggunakan WebView.
+- Memuat URL website produksi dari konfigurasi.
+- Mendukung navigasi internal.
+- Mendukung tombol kembali Android.
+- Menampilkan loading indicator.
+- Menangani koneksi internet yang terputus.
+- Mendukung upload file jika diperlukan.
+- Menangani izin kamera/file sesuai kebutuhan.
+- Tidak menyimpan kredensial Supabase di kode Flutter.
+- Tidak membuat database terpisah.
+- Semua data diambil dari website dan backend yang sama.
+
+Buat dokumentasi:
+- Instalasi Flutter.
+- Konfigurasi URL.
+- Menjalankan di emulator.
+- Build APK.
+- Build App Bundle.
+
+Website tetap harus bisa digunakan tanpa menginstal aplikasi Flutter.
+
+Jika AI Studio tidak dapat membangun atau menjalankan Flutter secara langsung, tetap buat struktur source code Flutter dan dokumentasi integrasinya. Jangan menggantinya dengan mockup.
+
+---
+
+# 22. HOSTING DAN DEPLOYMENT
+
+Target hosting website adalah Cloudflare Pages atau Cloudflare Workers.
+
+Pilih metode deployment Next.js yang benar-benar kompatibel dengan fitur yang digunakan.
+
+Jika membutuhkan adapter seperti OpenNext untuk Cloudflare Workers, konfigurasi dengan benar.
+
+Periksa kompatibilitas:
+- Server-side rendering.
+- API routes.
+- Server actions jika digunakan.
+- Environment variables.
+- Supabase Auth.
+- File upload.
+- Middleware.
+- Redirect.
+- Session handling.
+
+Jangan menggunakan fitur Next.js yang tidak didukung oleh target deployment tanpa alternatif.
+
+Siapkan:
+- Konfigurasi deployment.
+- Build scripts.
+- Environment variables.
+- Panduan deploy.
+- Panduan custom domain.
+- Panduan menghubungkan Supabase.
+
+Jangan mengklaim website sudah online sebelum benar-benar di-deploy.
+
+---
+
+# 23. KEAMANAN
+
+Terapkan prinsip keamanan berikut:
+
+1. Jangan mengekspos service role key.
+2. Gunakan RLS pada tabel sensitif.
+3. Validasi semua input di backend.
+4. Gunakan autentikasi untuk halaman internal.
+5. Terapkan otorisasi berdasarkan role.
+6. Gunakan transaksi database.
+7. Cegah pembayaran ganda.
+8. Cegah pesanan ganda akibat pengiriman request berulang.
+9. Validasi nominal tidak negatif.
+10. Validasi alokasi tidak melebihi penerimaan.
+11. Validasi pembayaran tidak salah mengurangi hak Driver.
+12. Batasi upload file.
+13. Jangan mencatat password atau secret ke log.
+14. Gunakan session handling yang aman.
+15. Catat aktivitas penting.
+16. Gunakan backup berkala di luar database utama.
+17. Sediakan prosedur pemulihan data.
+18. Hindari mengandalkan audit log aplikasi saja untuk mencegah perubahan langsung oleh pihak yang memiliki akses database.
+
+---
+
+# 24. VALIDASI DAN TESTING
+
+Buat automated tests untuk formula tarif.
+
+Minimal uji:
+
+- Jarak 0 KM.
+- Jarak 1 KM.
+- Jarak 2 KM.
+- Jarak 2,49 KM.
+- Jarak 2,5 KM.
+- Jarak 3 KM.
+- Jarak 3,5 KM.
+- Jarak 4 KM.
+- Jarak 6 KM.
+- Jarak 7 KM.
+- Batas maksimal potongan Admin.
+- Biaya hujan.
+- Biaya malam.
+- Tempat tambahan.
+- Pembulatan nominal.
+
+Buat test untuk proses keuangan:
+
+1. Belanja seluruhnya dari modal Driver.
+2. Belanja seluruhnya dari modal Admin.
+3. Belanja dengan modal campuran.
+4. Customer membayar cash kepada Driver.
+5. Customer membayar cash kepada Admin.
+6. Customer membayar QRIS kepada Admin.
+7. Customer membayar transfer kepada Admin.
+8. Driver menerima uang customer dengan alokasi belanja dan ongkir.
+9. Admin membayar Driver sebagian.
+10. Admin melunasi hak Driver.
+11. Pembayaran gabungan beberapa pesanan.
+12. Pembatalan pesanan.
+13. Reversal transaksi.
+14. Koreksi nominal.
+15. Dua admin mencatat transaksi secara bersamaan.
+16. Request pembayaran terkirim dua kali.
+17. Admin tanpa izin mencoba mengoreksi transaksi.
+18. Pengguna tidak login mencoba membuka halaman keuangan.
+
+Pastikan hasil perhitungan dan saldo benar.
+
+---
+
+# 25. ATURAN KHUSUS ORDER GABUNGAN
+
+Jangan otomatis menerapkan aturan tarif reguler ke Order Gabungan.
+
+Aturan Order Gabungan sebelumnya memiliki ketentuan berbeda:
+- 1 customer: potongan Admin Rp0.
+- 2 customer: potongan Admin Rp1.000.
+- 3 customer: potongan Admin Rp2.000.
+- BANTER 10% setelah potongan Admin.
+- Biaya tambahan 100% untuk Driver.
+
+Aturan tersebut belum dikonfirmasi apakah masih berlaku setelah aturan terbaru Admin Rp500 per KM di atas 2 KM.
+
+Karena itu:
+- Jangan mengaktifkan Order Gabungan sebagai perhitungan final sebelum aturan dikonfirmasi.
+- Jika menyiapkan modulnya, jadikan sebagai pricing rule terpisah yang dapat dikonfigurasi.
+- Jangan mencampurkan formula Order Gabungan dan reguler.
+- Beri label bahwa aturan Order Gabungan menunggu konfirmasi Owner.
+
+Prioritaskan kalkulator reguler terlebih dahulu.
+
+---
+
+# 26. PENGATURAN DAN KONFIGURASI
+
+Buat halaman pengaturan untuk:
+
+- Profil usaha.
+- Identitas aplikasi.
+- Pengaturan tarif.
+- Pengaturan biaya tambahan.
+- Manajemen pengguna.
+- Role dan izin.
+- Pengaturan notifikasi.
+- Pengaturan zona waktu.
+- Pengaturan nomor pesanan.
+- Pengaturan penyimpanan bukti.
+- Status koneksi database.
+- Informasi versi aplikasi.
+
+Semua pengaturan sensitif hanya dapat diubah oleh Owner atau pengguna dengan izin khusus.
+
+Perubahan pengaturan yang memengaruhi keuangan harus tercatat dalam audit log.
+
+---
+
+# 27. STRUKTUR PROJECT
+
+Buat struktur kode yang terorganisasi.
+
+Contoh:
+
+`/src`
+- `/app`
+- `/components`
+- `/features`
+  - `/dashboard`
+  - `/calculator`
+  - `/orders`
+  - `/drivers`
+  - `/customer-payments`
+  - `/driver-payments`
+  - `/expenses`
+  - `/reports`
+  - `/audit`
+  - `/settings`
+- `/lib`
+  - `/supabase`
+  - `/auth`
+  - `/permissions`
+  - `/finance`
+  - `/pricing`
+  - `/validation`
+  - `/utils`
+- `/types`
+- `/hooks`
+
+`/supabase`
+- `/migrations`
+- `/functions`
+- `/seed`
+
+`/mobile`
+- `/android_wrapper`
+
+`/docs`
+- `ARCHITECTURE.md`
+- `DATABASE_SCHEMA.md`
+- `FINANCIAL_RULES.md`
+- `SECURITY.md`
+- `DEPLOYMENT.md`
+- `ANDROID_BUILD.md`
+- `USER_GUIDE.md`
+
+Struktur boleh disesuaikan jika ada alasan teknis yang lebih baik, tetapi pisahkan fitur, logika bisnis, akses database, dan tampilan.
+
+---
+
+# 28. TAHAPAN PENGERJAAN
+
+Kerjakan proyek secara berurutan dan jangan melewatkan tahap penting.
+
+## Tahap 1 — Fondasi
+
+- Buat struktur Next.js.
+- Konfigurasi TypeScript.
+- Konfigurasi Tailwind.
+- Buat desain dasar.
+- Buat konfigurasi environment.
+- Buat integrasi Supabase.
+- Buat SQL migrations.
+
+## Tahap 2 — Autentikasi dan keamanan
+
+- Login.
+- Logout.
+- Profil.
+- Role.
+- Permission.
+- RLS.
+- Bootstrap Owner.
+
+## Tahap 3 — Pricing Engine
+
+- Implementasi tarif reguler.
+- Pembagian Admin.
+- Pembagian BANTER.
+- Hak Driver.
+- Biaya tambahan.
+- Automated tests.
+
+## Tahap 4 — Operasional
+
+- Data Driver.
+- Kalkulator.
+- Pesanan.
+- Detail pesanan.
+- Belanja.
+- Modal Admin dan Driver.
+
+## Tahap 5 — Keuangan
+
+- Penerimaan customer.
+- Alokasi penerimaan.
+- Hak pembayaran Driver.
+- Pembayaran Driver.
+- Pembayaran sebagian.
+- Pembayaran gabungan.
+- Rekonsiliasi.
+
+## Tahap 6 — Laporan dan audit
+
+- Dashboard.
+- Laporan keuangan.
+- Export.
+- Riwayat transaksi.
+- Audit log.
+- Koreksi.
+- Reversal.
+
+## Tahap 7 — Realtime dan penyimpanan
+
+- Supabase Realtime.
+- Supabase Storage.
+- Notifikasi.
+- Penanganan koneksi.
+
+## Tahap 8 — Android dan deployment
+
+- Source Flutter WebView.
+- Konfigurasi Cloudflare.
+- Build dan pengujian.
+- Dokumentasi.
+
+---
+
+# 29. ATURAN PENTING SELAMA PEMBANGUNAN
+
+1. Jangan hanya membuat UI statis.
+2. Jangan mengisi database produksi dengan data dummy.
+3. Jika membutuhkan data contoh, gunakan seed khusus development.
+4. Jangan mengubah proyek Supabase BANTER ADMIN yang sudah ada.
+5. Jangan mengubah proyek Supabase BANTER DEMO.
+6. HITUNG BANTER harus menggunakan proyek Supabase baru yang khusus.
+7. Jangan membuat kredensial palsu.
+8. Jangan mengarang URL proyek.
+9. Jangan mengklaim fitur sudah berfungsi jika belum diuji.
+10. Jangan menghapus data keuangan.
+11. Jangan mengubah transaksi lama akibat perubahan tarif.
+12. Jangan mencampurkan uang customer, modal Admin, dan modal Driver.
+13. Jangan menghitung uang yang diterima Admin sebagai pembayaran Driver.
+14. Jangan menghitung seluruh cash yang diterima Driver sebagai pendapatan Driver.
+15. Jangan mengurangi hak Driver dua kali.
+16. Jangan mengimplementasikan formula Order Gabungan sebelum dikonfirmasi.
+17. Jangan mengorbankan keamanan database demi kemudahan frontend.
+18. Jangan membuat tombol yang tidak memiliki fungsi.
+
+Jika ada keputusan yang belum jelas, gunakan konfigurasi yang aman dan tandai secara jelas sebagai belum dikonfirmasi. Jangan mengarang aturan keuangan.
+
+---
+
+# 30. HASIL AKHIR YANG WAJIB DIHASILKAN
+
+Saya menginginkan satu proyek HITUNG BANTER yang memiliki:
+
+1. Website responsif yang berfungsi.
+2. Login multi-admin.
+3. Hak akses Owner, Admin, dan Viewer.
+4. Database PostgreSQL terstruktur.
+5. SQL migrations.
+6. RLS dan keamanan.
+7. Kalkulator tarif reguler.
+8. Pricing Engine terpusat.
+9. Modul Driver.
+10. Modul pesanan.
+11. Modul sumber modal.
+12. Modul penerimaan customer.
+13. Modul pembayaran Driver.
+14. Perhitungan sisa hak pembayaran.
+15. Dashboard keuangan.
+16. Laporan keuangan.
+17. Riwayat transaksi.
+18. Audit log.
+19. Koreksi dan reversal.
+20. Upload bukti transaksi.
+21. Realtime antar-admin.
+22. Struktur Flutter WebView Android.
+23. Konfigurasi deployment Cloudflare.
+24. Dokumentasi teknis dan panduan penggunaan.
+25. Automated tests untuk perhitungan dan proses keuangan.
+
+## INSTRUKSI PENUTUP
+
+Mulailah dengan menganalisis lingkungan kerja dan kemampuan platform yang tersedia.
+
+Kemudian bangun aplikasi HITUNG BANTER secara menyeluruh sesuai spesifikasi ini.
+
+Prioritaskan akurasi perhitungan uang, konsistensi database, keamanan multi-admin, dan kemudahan penggunaan.
+
+Jangan berhenti setelah membuat dashboard atau halaman login.
+
+Jika proses pembangunan tidak dapat diselesaikan dalam satu eksekusi, tetap buat fondasi proyek, struktur lengkap, migrasi database, dan implementasi fitur secara berurutan. Berikan laporan jujur mengenai fitur yang sudah selesai, yang sudah diuji, dan yang masih memerlukan konfigurasi eksternal.
+
+Target akhirnya adalah aplikasi HITUNG BANTER yang benar-benar dapat digunakan sebagai sistem kalkulator, pembayaran, dan pembukuan keuangan driver BANTER.

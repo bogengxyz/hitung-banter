@@ -1,0 +1,264 @@
+{
+  "v": 0,
+  "components": {
+    "example-button": {
+      "id": "example-button",
+      "name": "Button",
+      "path": "./src/stories/Button.stories.ts",
+      "jsDocTags": {},
+      "description": "Primary UI component for user interaction",
+      "reactDocgen": {
+        "description": "Primary UI component for user interaction",
+        "methods": [],
+        "displayName": "Button",
+        "definedInFile": "C:\\Users\\bogen\\Downloads\\hitung-banter\\src\\stories\\Button.tsx",
+        "actualName": "Button",
+        "exportName": "Button",
+        "props": {
+          "primary": {
+            "required": false,
+            "tsType": {
+              "name": "boolean"
+            },
+            "description": "Is this the principal call to action on the page?",
+            "defaultValue": {
+              "value": "false",
+              "computed": false
+            }
+          },
+          "backgroundColor": {
+            "required": false,
+            "tsType": {
+              "name": "string"
+            },
+            "description": "What background color to use"
+          },
+          "size": {
+            "required": false,
+            "tsType": {
+              "name": "union",
+              "raw": "'small' | 'medium' | 'large'",
+              "elements": [
+                {
+                  "name": "literal",
+                  "value": "'small'"
+                },
+                {
+                  "name": "literal",
+                  "value": "'medium'"
+                },
+                {
+                  "name": "literal",
+                  "value": "'large'"
+                }
+              ]
+            },
+            "description": "How large should the button be?",
+            "defaultValue": {
+              "value": "'medium'",
+              "computed": false
+            }
+          },
+          "label": {
+            "required": true,
+            "tsType": {
+              "name": "string"
+            },
+            "description": "Button contents"
+          },
+          "onClick": {
+            "required": false,
+            "tsType": {
+              "name": "signature",
+              "type": "function",
+              "raw": "() => void",
+              "signature": {
+                "arguments": [],
+                "return": {
+                  "name": "void"
+                }
+              }
+            },
+            "description": "Optional click handler"
+          }
+        }
+      },
+      "stories": [
+        {
+          "id": "example-button--primary",
+          "name": "Primary",
+          "snippet": "const Primary = () => <Button onClick={fn()} primary label=\"Button\" />;"
+        },
+        {
+          "id": "example-button--secondary",
+          "name": "Secondary",
+          "snippet": "const Secondary = () => <Button onClick={fn()} label=\"Button\" />;"
+        },
+        {
+          "id": "example-button--large",
+          "name": "Large",
+          "snippet": "const Large = () => <Button onClick={fn()} size=\"large\" label=\"Button\" />;"
+        },
+        {
+          "id": "example-button--small",
+          "name": "Small",
+          "snippet": "const Small = () => <Button onClick={fn()} size=\"small\" label=\"Button\" />;"
+        }
+      ],
+      "import": "import { Button } from 'react-example';\nimport { fn } from 'storybook/test';"
+    },
+    "example-header": {
+      "id": "example-header",
+      "name": "Header",
+      "path": "./src/stories/Header.stories.ts",
+      "jsDocTags": {},
+      "reactDocgen": {
+        "description": "",
+        "methods": [],
+        "displayName": "Header",
+        "definedInFile": "C:\\Users\\bogen\\Downloads\\hitung-banter\\src\\stories\\Header.tsx",
+        "actualName": "Header",
+        "exportName": "Header",
+        "props": {
+          "user": {
+            "required": false,
+            "tsType": {
+              "name": "signature",
+              "type": "object",
+              "raw": "{\n  name: string;\n}",
+              "signature": {
+                "properties": [
+                  {
+                    "key": "name",
+                    "value": {
+                      "name": "string",
+                      "required": true
+                    }
+                  }
+                ]
+              }
+            },
+            "description": ""
+          },
+          "onLogin": {
+            "required": false,
+            "tsType": {
+              "name": "signature",
+              "type": "function",
+              "raw": "() => void",
+              "signature": {
+                "arguments": [],
+                "return": {
+                  "name": "void"
+                }
+              }
+            },
+            "description": ""
+          },
+          "onLogout": {
+            "required": false,
+            "tsType": {
+              "name": "signature",
+              "type": "function",
+              "raw": "() => void",
+              "signature": {
+                "arguments": [],
+                "return": {
+                  "name": "void"
+                }
+              }
+            },
+            "description": ""
+          },
+          "onCreateAccount": {
+            "required": false,
+            "tsType": {
+              "name": "signature",
+              "type": "function",
+              "raw": "() => void",
+              "signature": {
+                "arguments": [],
+                "return": {
+                  "name": "void"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "stories": [
+        {
+          "id": "example-header--logged-in",
+          "name": "Logged In",
+          "snippet": "const LoggedIn = () => <Header\r\n    onLogin={fn()}\r\n    onLogout={fn()}\r\n    onCreateAccount={fn()}\r\n    user={{\r\n      name: 'Jane Doe',\r\n    }} />;"
+        },
+        {
+          "id": "example-header--logged-out",
+          "name": "Logged Out",
+          "snippet": "const LoggedOut = () => <Header onLogin={fn()} onLogout={fn()} onCreateAccount={fn()} />;"
+        }
+      ],
+      "import": "import { Header } from 'react-example';\nimport { fn } from 'storybook/test';"
+    },
+    "design-system-hitung-banter-precision-tokens": {
+      "id": "design-system-hitung-banter-precision-tokens",
+      "name": "HitungBanterPrecisionTokens",
+      "path": "./src/stories/HitungBanterDesignSystem.stories.tsx",
+      "jsDocTags": {},
+      "error": {
+        "name": "No component found",
+        "message": "We could not detect the component from your story file. Specify meta.component.\n  13 | } from 'lucide-react';\n  14 |\n> 15 | const meta: Meta = {\n     | ^\n  16 |   title: 'Design System/Hitung Banter Precision Tokens',\n  17 |   parameters: {\n  18 |     layout: 'padded',\n\n./src/stories/HitungBanterDesignSystem.stories.tsx:\nimport type { Meta, StoryObj } from '@storybook/react';\nimport React from 'react';\nimport { RoleBadge } from '../components/RoleBadge';\nimport {\n  Wallet,\n  TrendingUp,\n  MapPin,\n  CheckCircle2,\n  AlertCircle,\n  Truck,\n  ArrowRight,\n  ShieldCheck,\n} from 'lucide-react';\n\nconst meta: Meta = {\n  title: 'Design System/Hitung Banter Precision Tokens',\n  parameters: {\n    layout: 'padded',\n  },\n};\n\nexport default meta;\n\nexport const TypographyAndNumerals: StoryObj = {\n  render: () => (\n    <div className=\"space-y-6 max-w-4xl p-6 bg-white rounded-2xl border border-slate-200\">\n      <div>\n        <span className=\"text-xs font-bold text-blue-600 uppercase tracking-wider\">Typography Scale</span>\n        <h1 className=\"text-2xl font-black text-slate-900 tracking-tight mt-1\">Heading 1: text-2xl font-black (24px)</h1>\n        <h2 className=\"text-xl font-black text-slate-900 tracking-tight mt-1\">Heading 2: text-xl font-black (20px)</h2>\n        <h3 className=\"text-base font-bold text-slate-900 mt-1\">Heading 3: text-base font-bold (16px)</h3>\n        <p className=\"text-sm font-semibold text-slate-800 mt-1\">Body Semi-bold: text-sm font-semibold (14px)</p>\n        <p className=\"text-xs text-slate-500 mt-1\">Caption / Secondary: text-xs text-slate-500 (12px)</p>\n      </div>\n\n      <div className=\"pt-4 border-t border-slate-100\">\n        <span className=\"text-xs font-bold text-blue-600 uppercase tracking-wider\">Tabular Numerals (Financial Alignment)</span>\n        <div className=\"grid grid-cols-3 gap-3 mt-2\">\n          <div className=\"p-3 rounded-xl bg-slate-50 border border-slate-200\">\n            <span className=\"text-[10px] text-slate-400 block\">Ongkir Dasar</span>\n            <span className=\"text-lg font-black text-slate-900 tabular-nums\">Rp15.000</span>\n          </div>\n          <div className=\"p-3 rounded-xl bg-slate-50 border border-slate-200\">\n            <span className=\"text-[10px] text-slate-400 block\">Bagian Admin</span>\n            <span className=\"text-lg font-black text-amber-600 tabular-nums\">Rp2.000</span>\n          </div>\n          <div className=\"p-3 rounded-xl bg-emerald-50 border border-emerald-200\">\n            <span className=\"text-[10px] text-emerald-700 block font-bold\">Hak Driver Net</span>\n            <span className=\"text-lg font-black text-emerald-700 tabular-nums\">Rp11.700</span>\n          </div>\n        </div>\n      </div>\n    </div>\n  ),\n};\n\nexport const RadiusScaleHierarchy: StoryObj = {\n  render: () => (\n    <div className=\"space-y-4 max-w-4xl p-6 bg-white rounded-2xl border border-slate-200\">\n      <h3 className=\"text-base font-black text-slate-900\">5-Tier Radius Hierarchy</h3>\n      <div className=\"grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs font-bold\">\n        <div className=\"p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900\">\n          rounded-lg (8px)\n          <span className=\"block text-[10px] font-normal text-blue-600 mt-1\">Micro tags, chips</span>\n        </div>\n        <div className=\"p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900\">\n          rounded-xl (12px)\n          <span className=\"block text-[10px] font-normal text-indigo-600 mt-1\">Buttons, Inputs</span>\n        </div>\n        <div className=\"p-3 rounded-2xl bg-purple-50 border border-purple-200 text-purple-900\">\n          rounded-2xl (16px)\n          <span className=\"block text-[10px] font-normal text-purple-600 mt-1\">Standard Cards</span>\n        </div>\n        <div className=\"p-3 rounded-3xl bg-amber-50 border border-amber-200 text-amber-900\">\n          rounded-3xl (24px)\n          <span className=\"block text-[10px] font-normal text-amber-600 mt-1\">Hero banners</span>\n        </div>\n        <div className=\"p-3 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-900\">\n          rounded-full\n          <span className=\"block text-[10px] font-normal text-emerald-600 mt-1\">Badges, Pills</span>\n        </div>\n      </div>\n    </div>\n  ),\n};\n\nexport const ButtonsAndBadges: StoryObj = {\n  render: () => (\n    <div className=\"space-y-4 max-w-4xl p-6 bg-white rounded-2xl border border-slate-200\">\n      <h3 className=\"text-base font-black text-slate-900\">Button &amp; Badge Components</h3>\n      <div className=\"flex flex-wrap items-center gap-3\">\n        <button className=\"h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer\">\n          <Truck className=\"w-4 h-4\" />\n          <span>Primary Button</span>\n        </button>\n        <button className=\"h-9 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer\">\n          <CheckCircle2 className=\"w-4 h-4\" />\n          <span>Secondary Dark</span>\n        </button>\n        <button className=\"h-9 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer\">\n          <Wallet className=\"w-4 h-4\" />\n          <span>Success Emerald</span>\n        </button>\n        <button className=\"h-9 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer\">\n          <span>Outline Neutral</span>\n        </button>\n      </div>\n\n      <div className=\"pt-3 border-t border-slate-100 flex flex-wrap items-center gap-3\">\n        <RoleBadge role=\"owner\" />\n        <RoleBadge role=\"admin\" />\n        <RoleBadge role=\"viewer\" />\n        <span className=\"px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200\">\n          Lunas\n        </span>\n        <span className=\"px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200\">\n          Tertunda\n        </span>\n        <span className=\"px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200\">\n          Belum Lunas\n        </span>\n      </div>\n    </div>\n  ),\n};\n"
+      },
+      "stories": [
+        {
+          "id": "design-system-hitung-banter-precision-tokens--typography-and-numerals",
+          "name": "Typography And Numerals",
+          "snippet": "const TypographyAndNumerals = () => (\r\n  <div className=\"space-y-6 max-w-4xl p-6 bg-white rounded-2xl border border-slate-200\">\r\n    <div>\r\n      <span className=\"text-xs font-bold text-blue-600 uppercase tracking-wider\">Typography Scale</span>\r\n      <h1 className=\"text-2xl font-black text-slate-900 tracking-tight mt-1\">Heading 1: text-2xl font-black (24px)</h1>\r\n      <h2 className=\"text-xl font-black text-slate-900 tracking-tight mt-1\">Heading 2: text-xl font-black (20px)</h2>\r\n      <h3 className=\"text-base font-bold text-slate-900 mt-1\">Heading 3: text-base font-bold (16px)</h3>\r\n      <p className=\"text-sm font-semibold text-slate-800 mt-1\">Body Semi-bold: text-sm font-semibold (14px)</p>\r\n      <p className=\"text-xs text-slate-500 mt-1\">Caption / Secondary: text-xs text-slate-500 (12px)</p>\r\n    </div>\r\n\r\n    <div className=\"pt-4 border-t border-slate-100\">\r\n      <span className=\"text-xs font-bold text-blue-600 uppercase tracking-wider\">Tabular Numerals (Financial Alignment)</span>\r\n      <div className=\"grid grid-cols-3 gap-3 mt-2\">\r\n        <div className=\"p-3 rounded-xl bg-slate-50 border border-slate-200\">\r\n          <span className=\"text-[10px] text-slate-400 block\">Ongkir Dasar</span>\r\n          <span className=\"text-lg font-black text-slate-900 tabular-nums\">Rp15.000</span>\r\n        </div>\r\n        <div className=\"p-3 rounded-xl bg-slate-50 border border-slate-200\">\r\n          <span className=\"text-[10px] text-slate-400 block\">Bagian Admin</span>\r\n          <span className=\"text-lg font-black text-amber-600 tabular-nums\">Rp2.000</span>\r\n        </div>\r\n        <div className=\"p-3 rounded-xl bg-emerald-50 border border-emerald-200\">\r\n          <span className=\"text-[10px] text-emerald-700 block font-bold\">Hak Driver Net</span>\r\n          <span className=\"text-lg font-black text-emerald-700 tabular-nums\">Rp11.700</span>\r\n        </div>\r\n      </div>\r\n    </div>\r\n  </div>\r\n);"
+        },
+        {
+          "id": "design-system-hitung-banter-precision-tokens--radius-scale-hierarchy",
+          "name": "Radius Scale Hierarchy",
+          "snippet": "const RadiusScaleHierarchy = () => (\r\n  <div className=\"space-y-4 max-w-4xl p-6 bg-white rounded-2xl border border-slate-200\">\r\n    <h3 className=\"text-base font-black text-slate-900\">5-Tier Radius Hierarchy</h3>\r\n    <div className=\"grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs font-bold\">\r\n      <div className=\"p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900\">\r\n        rounded-lg (8px)\r\n        <span className=\"block text-[10px] font-normal text-blue-600 mt-1\">Micro tags, chips</span>\r\n      </div>\r\n      <div className=\"p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-900\">\r\n        rounded-xl (12px)\r\n        <span className=\"block text-[10px] font-normal text-indigo-600 mt-1\">Buttons, Inputs</span>\r\n      </div>\r\n      <div className=\"p-3 rounded-2xl bg-purple-50 border border-purple-200 text-purple-900\">\r\n        rounded-2xl (16px)\r\n        <span className=\"block text-[10px] font-normal text-purple-600 mt-1\">Standard Cards</span>\r\n      </div>\r\n      <div className=\"p-3 rounded-3xl bg-amber-50 border border-amber-200 text-amber-900\">\r\n        rounded-3xl (24px)\r\n        <span className=\"block text-[10px] font-normal text-amber-600 mt-1\">Hero banners</span>\r\n      </div>\r\n      <div className=\"p-3 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-900\">\r\n        rounded-full\r\n        <span className=\"block text-[10px] font-normal text-emerald-600 mt-1\">Badges, Pills</span>\r\n      </div>\r\n    </div>\r\n  </div>\r\n);"
+        },
+        {
+          "id": "design-system-hitung-banter-precision-tokens--buttons-and-badges",
+          "name": "Buttons And Badges",
+          "snippet": "const ButtonsAndBadges = () => (\r\n  <div className=\"space-y-4 max-w-4xl p-6 bg-white rounded-2xl border border-slate-200\">\r\n    <h3 className=\"text-base font-black text-slate-900\">Button &amp; Badge Components</h3>\r\n    <div className=\"flex flex-wrap items-center gap-3\">\r\n      <button className=\"h-9 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer\">\r\n        <Truck className=\"w-4 h-4\" />\r\n        <span>Primary Button</span>\r\n      </button>\r\n      <button className=\"h-9 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer\">\r\n        <CheckCircle2 className=\"w-4 h-4\" />\r\n        <span>Secondary Dark</span>\r\n      </button>\r\n      <button className=\"h-9 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer\">\r\n        <Wallet className=\"w-4 h-4\" />\r\n        <span>Success Emerald</span>\r\n      </button>\r\n      <button className=\"h-9 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer\">\r\n        <span>Outline Neutral</span>\r\n      </button>\r\n    </div>\r\n\r\n    <div className=\"pt-3 border-t border-slate-100 flex flex-wrap items-center gap-3\">\r\n      <RoleBadge role=\"owner\" />\r\n      <RoleBadge role=\"admin\" />\r\n      <RoleBadge role=\"viewer\" />\r\n      <span className=\"px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200\">\r\n        Lunas\r\n      </span>\r\n      <span className=\"px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200\">\r\n        Tertunda\r\n      </span>\r\n      <span className=\"px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200\">\r\n        Belum Lunas\r\n      </span>\r\n    </div>\r\n  </div>\r\n);"
+        }
+      ],
+      "import": "import { CheckCircle2, Truck, Wallet } from 'lucide-react';\nimport { RoleBadge } from 'react-example';"
+    },
+    "example-page": {
+      "id": "example-page",
+      "name": "Page",
+      "path": "./src/stories/Page.stories.ts",
+      "jsDocTags": {},
+      "reactDocgen": {
+        "description": "",
+        "methods": [],
+        "displayName": "Page",
+        "definedInFile": "C:\\Users\\bogen\\Downloads\\hitung-banter\\src\\stories\\Page.tsx",
+        "actualName": "Page",
+        "exportName": "Page"
+      },
+      "stories": [
+        {
+          "id": "example-page--logged-out",
+          "name": "Logged Out",
+          "snippet": "const LoggedOut = () => <Page />;"
+        },
+        {
+          "id": "example-page--logged-in",
+          "name": "Logged In",
+          "snippet": "const LoggedIn = () => <Page />;"
+        }
+      ],
+      "import": "import { Page } from 'react-example';"
+    }
+  },
+  "meta": {
+    "docgen": "react-docgen",
+    "durationMs": 551
+  }
+}

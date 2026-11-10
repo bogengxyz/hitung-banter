@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix Remix HITUNG BANTER",
+  "description": "Kalkulator dan pembukuan keuangan driver BANTER: penghitungan tarif, hak driver, penerimaan customer, modal, pembayaran, dan laporan audit.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
