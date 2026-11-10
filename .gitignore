@@ -10,3 +10,5 @@ coverage/
 # AI and Agent workspace files
 .agents/
 .aistudio/
+*.apk
+
